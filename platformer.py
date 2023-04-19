@@ -22,6 +22,48 @@ def draw_grid():
             pygame.draw.line(screen, (255, 255, 255), (0, line * tile_size),(screen_width, line * tile_size))
         pygame.draw.line(screen, (255, 255, 255), (line * tile_size, 0), (line * tile_size, 1280))
 
+class Player():
+    def __init__(self, x, y):
+        img = pygame.image.load("characters/Character/Idle/images/Idle-Sheet_0.png")
+        self.image = pygame.transform.scale(img, (100,120))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.vel_y = 0
+        self.jumped = False
+
+    def update(self):
+        dx = 0
+        dy = 0
+        #get keypresses
+        key = pygame.key.get_pressed()
+        if self.rect.bottom == screen_height:
+            if key[pygame.K_SPACE] and self.jumped == False:
+                    self.vel_y = -15
+                    self.jumped = True
+        if key[pygame.K_SPACE] == False:
+            self.jumped = False
+        if key[pygame.K_a]:
+            dx -= 3
+        if key[pygame.K_d]:
+            dx += 3
+
+        #add gravity
+        self.vel_y += 1
+        if self.vel_y > 3:
+            self.vel_y = 3
+        dy += self.vel_y
+
+        #check for collision
+
+        #update player coordinates
+        self.rect.x += dx
+        self.rect.y += dy
+        #draw player onto screen
+        screen.blit(self.image, self.rect)
+
+        if self.rect.bottom > screen_height:
+            self.rect.bottom = screen_height
 class World():
     def __init__(self, data):
         self.tile_list = []
@@ -70,6 +112,8 @@ world_data=[
 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 ]
 
+#instances
+player = Player(100, screen_height-140)
 world = World(world_data)
 
 run = True
@@ -77,9 +121,9 @@ while run:
 
     screen.blit(bg_img, (0,0))
     screen.blit(bg_img2, (0,0))
-
     world.draw()
-    draw_grid()
+    player.update()
+    #draw_grid()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -88,3 +132,6 @@ while run:
     pygame.display.update()
 
 pygame.quit()
+"""to do list
+1. gör så att skärmen följer efter spelaren ( man kan ej se hela världen genom att stå stilla ) 
+"""

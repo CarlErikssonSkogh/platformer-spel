@@ -24,7 +24,7 @@ def draw_grid():
 
 class Player():
     def __init__(self, x, y):
-        img = pygame.image.load("characters/Character/Idle/images/Idle-Sheet_0.png")
+        img = pygame.image.load("characters/samurai/Idle/00_Idle.png")
         self.image = pygame.transform.scale(img, (100,120))
         self.rect = self.image.get_rect()
         self.rect.x = x

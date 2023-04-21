@@ -3,8 +3,12 @@ from pygame.locals import *
 
 pygame.init()
 
+
 screen_width = 1000
 screen_height= 600
+
+clock = pygame.time.Clock()
+fps = 80
 
 screen = pygame.display.set_mode((screen_width,screen_height))
 pygame.display.set_caption("Platformer")
@@ -24,32 +28,123 @@ def draw_grid():
 
 class Player():
     def __init__(self, x, y):
-        img = pygame.image.load("characters/samurai/Idle/00_Idle.png")
-        self.image = pygame.transform.scale(img, (100,120))
+        self.images_right = []
+        self.images_left = []
+        self.images_idle_right = []
+        self.images_idle_left = []
+        self.images_jump_right = []
+        self.images_jump_left = []
+        self.images_fall_right = []
+        self.images_fall_left = []
+        self.index = 0
+        self.counter = 0
+
+        #animation
+        #jump/fall
+        for num in range(0, 2):
+            #jump
+            img_jump_right = pygame.image.load(f"characters/samurai/jump/{num}.png")
+            img_jump_right = pygame.transform.scale(img_jump_right, (60, 80))
+            self.images_jump_right.append(img_jump_right)
+            img_jump_left = pygame.transform.flip(img_jump_right, True, False)
+            self.images_jump_left.append(img_jump_left)
+
+            #fall
+            img_fall_right = pygame.image.load(f"characters/samurai/fall/{num}.png")
+            img_fall_right = pygame.transform.scale(img_fall_right, (60, 80))
+            self.images_fall_right.append(img_fall_right)
+            img_fall_left = pygame.transform.flip(img_fall_right, True, False)
+            self.images_fall_left.append(img_fall_left)
+
+        #left/right/idle
+        for num in range(0, 8):
+            img_idle_right = pygame.image.load(f"characters/samurai/idle/{num}.png")
+            img_idle_right = pygame.transform.scale(img_idle_right, (60, 80))
+            img_idle_left = pygame.transform.flip(img_idle_right, True, False)
+            img_right = pygame.image.load(f"characters/samurai/run/{num}.png")
+            img_right = pygame.transform.scale(img_right, (60,80))
+            img_left = pygame.transform.flip(img_right, True, False)
+            self.images_right.append(img_right)
+            self.images_left.append(img_left)
+            self.images_idle_right.append(img_idle_right)
+            self.images_idle_left.append(img_idle_left)
+        self.image = self.images_idle_right[self.index]
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
         self.vel_y = 0
         self.jumped = False
-
+        self.direction = 1
+        self.idle = True
+        self.inAir = False
     def update(self):
         dx = 0
         dy = 0
+        walk_cooldown = 7
+        #is character in the air?
+        if self.rect.bottom == screen_height:
+            self.inAir = False
+        else:
+            self.inAir = True
+
         #get keypresses
         key = pygame.key.get_pressed()
         if self.rect.bottom == screen_height:
             if key[pygame.K_SPACE] and self.jumped == False:
-                    self.vel_y = -15
+                    self.vel_y = -10
                     self.jumped = True
         if key[pygame.K_SPACE] == False:
             self.jumped = False
+
         if key[pygame.K_a]:
             dx -= 3
+            self.counter += 1
+            self.direction = -1
+            self.idle = False
         if key[pygame.K_d]:
             dx += 3
+            self.counter += 1
+            self.direction = 1
+            self.idle = False
 
+        #if key a or d is not pushed down
+        if key[pygame.K_a] == False and key[pygame.K_d] == False:
+            self.counter += 1
+            self.idle= True
+
+        #animations
+        if self.counter > walk_cooldown:
+            self.counter = 0
+            self.index += 1
+            if self.index >= len(self.images_right):
+                 self.index = 0
+            #facing right
+            if self.inAir == False:
+                if self.direction == 1:
+                    self.image = self.images_right[self.index]
+                    if self.idle:
+                        self.image = self.images_idle_right[self.index]
+                # facing left
+                if self.direction == -1:
+                    self.image = self.images_left[self.index]
+                    if self.idle:
+                        self.image = self.images_idle_left[self.index]
+            #jumping/falling right and left
+            if self.inAir:
+                if self.index >= len(self.images_jump_right):
+                    self.index = 0
+                    if self.direction == 1:
+                        if self.vel_y <= 0:
+                            self.image = self.images_jump_right[self.index]
+                        if self.vel_y >=0:
+                            self.image = self.images_fall_right[self.index]
+                    if self.direction == -1:
+                        if self.vel_y <=0:
+                            self.image = self.images_jump_left[self.index]
+                        if self.vel_y >=0:
+                            self.image = self.images_fall_left[self.index]
         #add gravity
-        self.vel_y += 1
+        self.vel_y += 0.5
         if self.vel_y > 3:
             self.vel_y = 3
         dy += self.vel_y
@@ -113,12 +208,13 @@ world_data=[
 ]
 
 #instances
-player = Player(100, screen_height-140)
+player = Player(100, screen_height-40)
 world = World(world_data)
 
 run = True
 while run:
 
+    clock.tick(fps)
     screen.blit(bg_img, (0,0))
     screen.blit(bg_img2, (0,0))
     world.draw()

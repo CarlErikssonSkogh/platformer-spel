@@ -111,8 +111,10 @@ class Player():
 
 
     def update(self):
+        #counts the attack cooldown
         if self.attackCounter < 50:
             self.attackCounter += 1
+
         print(self.attackCounter)
         dx = 0
         dy = 0

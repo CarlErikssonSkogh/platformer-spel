@@ -38,16 +38,24 @@ class Player():
         self.images_fall_left = []
         self.images_attack1_right = []
         self.images_attack1_left = []
+        self.images_attackEffect = []
         self.index = 0
+        self.attackEffect_index = 0
         self.counter = 0
 
         #animation
+        #attack effect
+        for num in range(0,10):
+            img_attackEffect = pygame.image.load(f"characters/samurai/attack effect/attackeffect_{num}.png")
+            img_attackEffect = pygame.transform.scale(img_attackEffect,(100,100))
+            self.images_attackEffect.append(img_attackEffect)
+
         #attack1 and attack2
         for num in range(0,6):
             img_attack1_right = pygame.image.load(f"characters/samurai/attack1/{num}.png")
             if num < 4:
                 img_attack1_right = pygame.transform.scale(img_attack1_right, (60, 80))
-            if num >3:
+            if num > 3:
                 img_attack1_right = pygame.transform.scale(img_attack1_right, (200, 80))
             self.images_attack1_right.append(img_attack1_right)
             img_attack1_left = pygame.transform.flip(img_attack1_right, True, False)
@@ -81,9 +89,13 @@ class Player():
             self.images_idle_right.append(img_idle_right)
             self.images_idle_left.append(img_idle_left)
         self.image = self.images_idle_right[self.index]
+        self.image_attackEffect = self.images_attackEffect[self.attackEffect_index]
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.rect_attack = self.image_attackEffect.get_rect()
+        self.rect_attack.x = self.rect.x+100
+        self.rect_attack.y = self.rect.y-5
         self.vel_y = 0
         self.jumped = False
         self.jumpedTimes = 0
@@ -96,6 +108,7 @@ class Player():
 
     #function for jumping
     def jump(self):
+        self.attacked = False
         self.vel_y = -7
         self.jumped = True
         self.jumpedTimes += 1
@@ -107,6 +120,7 @@ class Player():
         if self.inAir == False:
             self.attacked = True
             self.index = 0
+            self.attackEffect_index = 0
             self.attackCounter = 0
 
 
@@ -115,14 +129,14 @@ class Player():
         if self.attackCounter < 50:
             self.attackCounter += 1
 
-        print(self.attackCounter)
+        print(self.attackEffect_index)
         dx = 0
         dy = 0
         if self.attacked:
             animation_cooldown = 4
         else:
             animation_cooldown = 7
-        attack_cooldown = 3
+
         #is character in the air?
         if self.rect.bottom == screen_height:
             self.inAir = False
@@ -134,14 +148,18 @@ class Player():
 
         #movement
         if key[pygame.K_a]:
-            dx -= 3
+            if self.attacked == False:
+                dx -= 3
+                self.direction = -1
+
             self.counter += 1
-            self.direction = -1
             self.idle = False
         if key[pygame.K_d]:
-            dx += 3
+            if self.attacked == False:
+                dx += 3
+                self.direction = 1
+
             self.counter += 1
-            self.direction = 1
             self.idle = False
 
         #if key a or d is not pushed down
@@ -150,6 +168,10 @@ class Player():
             self.idle= True
 
         #animations
+        #index and cooldowns between each image
+            # for attackEffect
+        if self.counter > 2.5 and self.attackEffect_index < 10:
+            self.attackEffect_index += 1
         if self.counter > animation_cooldown:
             self.counter = 0
             self.index += 1
@@ -170,7 +192,10 @@ class Player():
                     if self.attacked:
                         if self.index >= len(self.images_attack1_right):
                             self.index = 0
-                            self.attacked=False
+                            self.attacked = False
+
+
+
 
                         self.image = self.images_attack1_right[self.index]
 
@@ -185,6 +210,7 @@ class Player():
 
                     # attack left
                     if self.attacked:
+
                         if self.index >= len(self.images_attack1_right):
                             self.index = 0
                             self.attacked = False
@@ -204,6 +230,10 @@ class Player():
                             self.image = self.images_jump_left[self.index]
                         if self.vel_y >=0:
                             self.image = self.images_fall_left[self.index]
+            if self.attacked:
+                if self.attackEffect_index >= len(self.images_attackEffect):
+                    self.attackEffect_index = 0
+                self.image_attackEffect = self.images_attackEffect[self.attackEffect_index]
 
         #add gravity
         self.vel_y += 0.3
@@ -216,11 +246,23 @@ class Player():
         #update player coordinates
         self.rect.x += dx
         self.rect.y += dy
+        self.rect_attack.x += dx
+        self.rect_attack.y += dy
+
         #draw player onto screen
+        pygame.draw.rect(screen,(255,0,0),self.rect,1)
+        pygame.draw.rect(screen, (255, 0, 0), self.rect_attack, 1)
         screen.blit(self.image, self.rect)
+        if self.direction == 1 and self.attacked and self.inAir==False:
+            screen.blit(self.image_attackEffect, (self.rect.x+100,self.rect.y-5))
+        if self.direction == -1 and self.attacked and self.inAir==False:
+            screen.blit(self.image_attackEffect, (self.rect.x-160,self.rect.y-5))
 
         if self.rect.bottom > screen_height:
             self.rect.bottom = screen_height
+            self.rect_attack.bottom = screen_height
+
+
 class World():
     def __init__(self, data):
         self.tile_list = []

@@ -88,11 +88,14 @@ class Player():
             self.images_left.append(img_left)
             self.images_idle_right.append(img_idle_right)
             self.images_idle_left.append(img_idle_left)
+
         self.image = self.images_idle_right[self.index]
         self.image_attackEffect = self.images_attackEffect[self.attackEffect_index]
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
         self.rect_attack = self.image_attackEffect.get_rect()
         self.rect_attack.x = self.rect.x+100
         self.rect_attack.y = self.rect.y-5
@@ -107,7 +110,9 @@ class Player():
         self.attackCounter = 50
 
     #function for jumping
+
     def jump(self):
+        self.inAir = True
         self.attacked = False
         self.vel_y = -7
         self.jumped = True
@@ -123,13 +128,14 @@ class Player():
             self.attackEffect_index = 0
             self.attackCounter = 0
 
-
     def update(self):
+        #if the player is falling (gravity = 3) inAir = True
+        if self.vel_y == 5:
+            self.inAir = True
         #counts the attack cooldown
         if self.attackCounter < 50:
             self.attackCounter += 1
 
-        print(self.attackEffect_index)
         dx = 0
         dy = 0
         if self.attacked:
@@ -137,12 +143,6 @@ class Player():
         else:
             animation_cooldown = 7
 
-        #is character in the air?
-        if self.rect.bottom == screen_height:
-            self.inAir = False
-            self.jumpedTimes = 0
-        else:
-            self.inAir = True
         #get keypresses
         key = pygame.key.get_pressed()
 
@@ -169,9 +169,6 @@ class Player():
 
         #animations
         #index and cooldowns between each image
-            # for attackEffect
-        if self.counter > 2.5 and self.attackEffect_index < 10:
-            self.attackEffect_index += 1
         if self.counter > animation_cooldown:
             self.counter = 0
             self.index += 1
@@ -193,9 +190,6 @@ class Player():
                         if self.index >= len(self.images_attack1_right):
                             self.index = 0
                             self.attacked = False
-
-
-
 
                         self.image = self.images_attack1_right[self.index]
 
@@ -230,6 +224,10 @@ class Player():
                             self.image = self.images_jump_left[self.index]
                         if self.vel_y >=0:
                             self.image = self.images_fall_left[self.index]
+
+            #attack effect in both directions
+        if self.counter > 2.5 and self.attackEffect_index < 10:
+            self.attackEffect_index += 1
             if self.attacked:
                 if self.attackEffect_index >= len(self.images_attackEffect):
                     self.attackEffect_index = 0
@@ -237,11 +235,29 @@ class Player():
 
         #add gravity
         self.vel_y += 0.3
-        if self.vel_y > 3:
-            self.vel_y = 3
+        if self.vel_y > 5:
+            self.vel_y = 5
         dy += self.vel_y
 
         #check for collision
+        for tile in world.tile_list:
+            #check for collision in x-direction
+            if tile[1].colliderect(self.rect.x+dx, self.rect.y, self.width, self.height):
+                dx = 0
+            #check for collision in y-direction
+            if tile[1].colliderect(self.rect.x, self.rect.y+dy,self.width, self.height):
+
+                #check if below the ground (jumping)
+                if self.vel_y < 0:
+                    dy = tile[1].bottom - self.rect.top
+                    self.vel_y = 0.0
+                #check if above the ground (falling)
+                elif self.vel_y >= 0:
+                    dy = tile[1].top - self.rect.bottom
+                    self.jumpedTimes = 0
+                    self.vel_y = 0
+                    self.inAir = False
+
 
         #update player coordinates
         self.rect.x += dx
@@ -250,22 +266,35 @@ class Player():
         self.rect_attack.y += dy
 
         #draw player onto screen
+
+        if self.direction == 1:
+            self.rect_attack.x = self.rect.x + 100
+        if self.direction == -1:
+            self.rect_attack.x = self.rect.x - 140
         pygame.draw.rect(screen,(255,0,0),self.rect,1)
         pygame.draw.rect(screen, (255, 0, 0), self.rect_attack, 1)
-        screen.blit(self.image, self.rect)
+
+        # denna kontroll måste göras eftersom bild 4 och 5 i attack ej är centrerade, detta gör så att när man kör flip funktionen
+        # på dom så kommer spriten att flytta sig till andra sidan istället istället för att förbli centrerad som med andra sprites.
+        if self.direction== -1 and self.attacked and self.index == 4:
+            screen.blit(self.image, (self.rect.x-140,self.rect.y))
+
+        elif self.direction== -1 and self.attacked and self.index == 5:
+            screen.blit(self.image, (self.rect.x - 140, self.rect.y))
+        else:
+            screen.blit(self.image, self.rect)
+
+        #attack effect
         if self.direction == 1 and self.attacked and self.inAir==False:
             screen.blit(self.image_attackEffect, (self.rect.x+100,self.rect.y-5))
         if self.direction == -1 and self.attacked and self.inAir==False:
-            screen.blit(self.image_attackEffect, (self.rect.x-160,self.rect.y-5))
-
-        if self.rect.bottom > screen_height:
-            self.rect.bottom = screen_height
-            self.rect_attack.bottom = screen_height
-
+            screen.blit(self.image_attackEffect, (self.rect.x-140,self.rect.y-5))
 
 class World():
     def __init__(self, data):
         self.tile_list = []
+        #block som ej ska ha någon collision
+        self.tile_list_liquid = []
         #load images
         dirt_img = pygame.image.load("assets/tiles (biome 1)/tile001.png")
         void_img = pygame.image.load("assets/tiles (biome 1)/tile014.png")
@@ -293,21 +322,22 @@ class World():
     def draw(self):
         for tile in self.tile_list:
             screen.blit(tile[0],tile[1])
+            pygame.draw.rect(screen, (255,255,255),tile[1],1)
 world_data=[
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0,0,1,1,1,2,2,1,0,0,0,0,0,0,0,0,0,0],
-[0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0],
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,1,0,0],
+[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0],
+[1,0,0,0,0,0,0,0,0,1,1,1,2,2,1,0,0,0,0,0,0,0,0,0,0],
+[1,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[1,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
+[1,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0],
+[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0],
+[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,1,0,0],
 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,1,1],
 ]
 
@@ -331,7 +361,7 @@ while run:
              break
         #jumping and doublejumping
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE and player.jumpedTimes <1:
+            if event.key == pygame.K_SPACE and player.jumpedTimes <2:
                 player.jump()
         #mouseclick
         mKey = pygame.mouse.get_pressed()
@@ -346,4 +376,5 @@ pygame.quit()
 """to do list
 1. gör så att skärmen följer efter spelaren ( man kan ej se hela världen genom att stå stilla ) 
 2. fixa så att attack left inte flyttar på sig
+3. för att undvika collision skapa en separat tile_list och använd den i def draw(self)
 """

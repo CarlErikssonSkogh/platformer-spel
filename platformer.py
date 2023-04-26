@@ -1,5 +1,16 @@
 import pygame
 from pygame.locals import *
+#Koden handlar om ett plattformsspel med en samuraj-karaktär som spelaren styr. Koden definierar spelvariabler och laddar
+#in bilder för bakgrund, karaktär och animationer. Den största funktionen är update() och det är denna funktion som körs
+#hela tiden inom en while loop. Klassen World() Skapar alla tiles som t.ex gräsblock. Den gör detta genom att ta in och hantera
+#en world_data som bara är flera listor i en lista med ettor och nollor. Tänk på den som ett grid där alla nollor är luft
+#och alla ettor är gräs osv. Det finns också en funktion som ritar ut en rutnät på skärmen för att positionera alla tiles
+# i World klassen.
+#I koden finns också en klass för spelaren som definierar variabler som position, animationer och rörelse.
+#Det finns även en funktion för att räkna poäng baserat på hur lång tid spelaren har klarat sig.
+
+#Jag har väldigt mycket kod kvar att skriva då jag nästan enbart fokuserat på animationer och rörelser hitills. Det som jag har kvar att skapa är
+#fiender, loot, en shop med uppgraderingar och slutligen en boss. Jag skulle även vilja ha en tutorial i början om jag hinner.
 
 pygame.init()
 
@@ -42,6 +53,7 @@ class Player():
         self.index = 0
         self.attackEffect_index = 0
         self.counter = 0
+        self.timer=0
 
         #animation
         #attack effect
@@ -109,8 +121,39 @@ class Player():
         self.attack_cooldown = 50
         self.attackCounter = 50
 
-    #function for jumping
+    #funktion for timer (points)
+    def Timer(self):
+        #Calculate the time in seconds
+        self.timer = pygame.time.get_ticks() // 1000
+        #Check if the timer has reached 10 seconds
+        if self.timer >= 60:
+            #Calculate the number of minutes and seconds
+            minutes = self.timer // 60
+            seconds = self.timer % 60
 
+            #If the seconds are less than 10, format them with a leading zero
+            if seconds < 10:
+                seconds_str = f"0{seconds}"
+            else:
+                seconds_str = str(seconds)
+
+            #Format the timer string as "m:ss"
+            self.timer = f"{minutes}:{seconds_str}"
+
+        else:
+            #Convert the timer value to a string
+            self.timer = str(self.timer)
+
+        #Render the timer label
+        font = pygame.font.SysFont("Arial", 32)
+        text_color = (255, 255, 255)
+        label_surface = font.render(f"Time:{self.timer}", True, text_color)
+
+        #Blit the timer label onto the screen
+        screen.blit(label_surface, (850, 25))
+
+
+    #function for jumping
     def jump(self):
         self.inAir = True
         self.attacked = False
@@ -129,9 +172,12 @@ class Player():
             self.attackCounter = 0
 
     def update(self):
+        player.Timer()
+
         #if the player is falling (gravity = 3) inAir = True
         if self.vel_y == 5:
             self.inAir = True
+
         #counts the attack cooldown
         if self.attackCounter < 50:
             self.attackCounter += 1
@@ -226,7 +272,7 @@ class Player():
                             self.image = self.images_fall_left[self.index]
 
             #attack effect in both directions
-        if self.counter > 2.5 and self.attackEffect_index < 10:
+        if self.counter > 2.5 and self.attackEffect_index < len(self.images_attackEffect):
             self.attackEffect_index += 1
             if self.attacked:
                 if self.attackEffect_index >= len(self.images_attackEffect):
@@ -274,8 +320,8 @@ class Player():
         pygame.draw.rect(screen,(255,0,0),self.rect,1)
         pygame.draw.rect(screen, (255, 0, 0), self.rect_attack, 1)
 
-        # denna kontroll måste göras eftersom bild 4 och 5 i attack ej är centrerade, detta gör så att när man kör flip funktionen
-        # på dom så kommer spriten att flytta sig till andra sidan istället istället för att förbli centrerad som med andra sprites.
+        #denna kontroll måste göras eftersom bild 4 och 5 i attack ej är centrerade, detta gör så att när man kör flip funktionen
+        #på dom så kommer spriten att flytta sig till andra sidan istället istället för att förbli centrerad som med andra sprites.
         if self.direction== -1 and self.attacked and self.index == 4:
             screen.blit(self.image, (self.rect.x-140,self.rect.y))
 
@@ -289,6 +335,8 @@ class Player():
             screen.blit(self.image_attackEffect, (self.rect.x+100,self.rect.y-5))
         if self.direction == -1 and self.attacked and self.inAir==False:
             screen.blit(self.image_attackEffect, (self.rect.x-140,self.rect.y-5))
+
+
 
 class World():
     def __init__(self, data):
@@ -347,7 +395,6 @@ world = World(world_data)
 
 run = True
 while run:
-
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
     screen.blit(bg_img2, (0,0))
@@ -373,8 +420,3 @@ while run:
     pygame.display.update()
 
 pygame.quit()
-"""to do list
-1. gör så att skärmen följer efter spelaren ( man kan ej se hela världen genom att stå stilla ) 
-2. fixa så att attack left inte flyttar på sig
-3. för att undvika collision skapa en separat tile_list och använd den i def draw(self)
-"""

@@ -54,6 +54,8 @@ class Player():
         self.attackEffect_index = 0
         self.counter = 0
         self.timer=0
+        self.dx = 0
+        self.dy = 0
 
         #animation
         #attack effect
@@ -121,6 +123,7 @@ class Player():
         self.attack_cooldown = 50
         self.attackCounter = 50
 
+
     #funktion for timer (points)
     def Timer(self):
         #Calculate the time in seconds
@@ -173,7 +176,7 @@ class Player():
 
     def update(self):
         player.Timer()
-
+        print(self.dx)
         #if the player is falling (gravity = 3) inAir = True
         if self.vel_y == 5:
             self.inAir = True
@@ -181,9 +184,8 @@ class Player():
         #counts the attack cooldown
         if self.attackCounter < 50:
             self.attackCounter += 1
-
-        dx = 0
-        dy = 0
+        self.dx = 0
+        self.dy = 0
         if self.attacked:
             animation_cooldown = 4
         else:
@@ -195,14 +197,14 @@ class Player():
         #movement
         if key[pygame.K_a]:
             if self.attacked == False:
-                dx -= 3
+                self.dx -= 3
                 self.direction = -1
 
             self.counter += 1
             self.idle = False
         if key[pygame.K_d]:
             if self.attacked == False:
-                dx += 3
+                self.dx += 3
                 self.direction = 1
 
             self.counter += 1
@@ -238,7 +240,6 @@ class Player():
                             self.attacked = False
 
                         self.image = self.images_attack1_right[self.index]
-
                 # facing left
                 #running left
                 if self.direction == -1:
@@ -283,33 +284,33 @@ class Player():
         self.vel_y += 0.3
         if self.vel_y > 5:
             self.vel_y = 5
-        dy += self.vel_y
+        self.dy += self.vel_y
 
         #check for collision
         for tile in world.tile_list:
             #check for collision in x-direction
-            if tile[1].colliderect(self.rect.x+dx, self.rect.y, self.width, self.height):
-                dx = 0
+            if tile[1].colliderect(self.rect.x+self.dx, self.rect.y, self.width, self.height):
+               self. dx = 0
             #check for collision in y-direction
-            if tile[1].colliderect(self.rect.x, self.rect.y+dy,self.width, self.height):
+            if tile[1].colliderect(self.rect.x, self.rect.y+self.dy,self.width, self.height):
 
                 #check if below the ground (jumping)
                 if self.vel_y < 0:
-                    dy = tile[1].bottom - self.rect.top
+                    self.dy = tile[1].bottom - self.rect.top
                     self.vel_y = 0.0
                 #check if above the ground (falling)
                 elif self.vel_y >= 0:
-                    dy = tile[1].top - self.rect.bottom
+                    self.dy = tile[1].top - self.rect.bottom
                     self.jumpedTimes = 0
                     self.vel_y = 0
                     self.inAir = False
 
 
         #update player coordinates
-        self.rect.x += dx
-        self.rect.y += dy
-        self.rect_attack.x += dx
-        self.rect_attack.y += dy
+        self.rect.x += self.dx
+        self.rect.y += self.dy
+        self.rect_attack.x += self.dx
+        self.rect_attack.y += self.dy
 
         #draw player onto screen
 
@@ -370,23 +371,23 @@ class World():
     def draw(self):
         for tile in self.tile_list:
             screen.blit(tile[0],tile[1])
-            pygame.draw.rect(screen, (255,255,255),tile[1],1)
+
 world_data=[
 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0],
-[1,0,0,0,0,0,0,0,0,1,1,1,2,2,1,0,0,0,0,0,0,0,0,0,0],
-[1,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[1,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
-[1,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,1,0,0],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,1,1],
+[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[2,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0],
+[2,0,0,0,0,0,0,0,0,1,1,1,2,2,1,0,0,0,0,0,0,0,0,0,0],
+[2,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[2,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[2,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
+[2,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0],
+[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0],
+[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,1,0,0],
+[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,1,1],
 ]
 
 #instances
@@ -410,6 +411,7 @@ while run:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and player.jumpedTimes <2:
                 player.jump()
+
         #mouseclick
         mKey = pygame.mouse.get_pressed()
 

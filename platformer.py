@@ -50,12 +50,16 @@ class Player():
         self.images_attack1_right = []
         self.images_attack1_left = []
         self.images_attackEffect = []
+        self.images_dash_right = []
+        self.images_dash_left = []
         self.index = 0
         self.attackEffect_index = 0
+        self.dash_index = 0
         self.counter = 0
         self.timer=0
         self.dx = 0
         self.dy = 0
+        self.dashed = False
 
         #animation
         #attack effect
@@ -103,8 +107,17 @@ class Player():
             self.images_idle_right.append(img_idle_right)
             self.images_idle_left.append(img_idle_left)
 
+        #dash
+        for num in range (0, 6):
+            img_dash_left = pygame.image.load(f"characters/samurai/dash/{num}.png")
+            img_dash_left = pygame.transform.scale(img_dash_left, (60, 80))
+            img_dash_right = pygame.transform.flip(img_dash_left, True, False)
+            self.images_dash_right.append(img_dash_right)
+            self.images_dash_left.append(img_dash_left)
+
         self.image = self.images_idle_right[self.index]
         self.image_attackEffect = self.images_attackEffect[self.attackEffect_index]
+        self.image_dash = self.images_dash_right[self.dash_index]
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -121,7 +134,10 @@ class Player():
         self.inAir = False
         self.attacked = False
         self.attack_cooldown = 50
+        self.dash_duration = 200
         self.attackCounter = 50
+        self.dash_counter = 0
+
 
 
     #funktion for timer (points)
@@ -173,10 +189,21 @@ class Player():
             self.index = 0
             self.attackEffect_index = 0
             self.attackCounter = 0
+    #function for dashing
+    def dash(self):
+        self.dash_index = 0
+        if self.dash_counter <= 0 and self.dashed == False:
+            self.vel_y = 0
+            self.dashed = True
+            if self.direction == 1:
+                self.dx = 20
+            if self.direction == -1:
+                self.dx = -20
+
+
 
     def update(self):
         player.Timer()
-        print(self.dx)
         #if the player is falling (gravity = 3) inAir = True
         if self.vel_y == 5:
             self.inAir = True
@@ -184,10 +211,13 @@ class Player():
         #counts the attack cooldown
         if self.attackCounter < 50:
             self.attackCounter += 1
-        self.dx = 0
-        self.dy = 0
+        if self.dashed == False:
+            self.dx = 0
+            self.dy = 0
         if self.attacked:
             animation_cooldown = 4
+        if self.dashed:
+            animation_cooldown = 3
         else:
             animation_cooldown = 7
 
@@ -196,15 +226,15 @@ class Player():
 
         #movement
         if key[pygame.K_a]:
-            if self.attacked == False:
-                self.dx -= 3
+            if self.attacked == False and self.dashed == False:
+                self.dx = -3
                 self.direction = -1
 
             self.counter += 1
             self.idle = False
         if key[pygame.K_d]:
-            if self.attacked == False:
-                self.dx += 3
+            if self.attacked == False and self.dashed == False:
+                self.dx = 3
                 self.direction = 1
 
             self.counter += 1
@@ -214,6 +244,17 @@ class Player():
         if key[pygame.K_a] == False and key[pygame.K_d] == False:
             self.counter += 1
             self.idle= True
+
+        #limits dashing
+        if self.dashed:
+            self.dash_counter += 20
+            if self.dash_counter > self.dash_duration:
+                self.dashed = False
+
+        if self.dashed == False:
+            self.dash_counter -= 1
+            if self.dash_counter <= 0:
+                self.dash_counter = 0
 
         #animations
         #index and cooldowns between each image
@@ -272,16 +313,27 @@ class Player():
                         if self.vel_y >=0:
                             self.image = self.images_fall_left[self.index]
 
-            #attack effect in both directions
+        #attack effect in both directions
         if self.counter > 2.5 and self.attackEffect_index < len(self.images_attackEffect):
             self.attackEffect_index += 1
             if self.attacked:
                 if self.attackEffect_index >= len(self.images_attackEffect):
                     self.attackEffect_index = 0
                 self.image_attackEffect = self.images_attackEffect[self.attackEffect_index]
+        #dashing in both directions
+        if self.dashed:
+            if self.dash_counter > animation_cooldown and self.dash_index < len(self.images_dash_right):
+                self.dash_index += 1
+                if self.dash_index >= len(self.images_dash_right):
+                    self.dash_index = 0
+                if self.direction == 1:
+                    self.image_dash = self.images_dash_right[self.dash_index]
+                if self.direction == -1:
+                    self.image_dash = self.images_dash_left[self.dash_index]
 
         #add gravity
-        self.vel_y += 0.3
+        if self.dashed == False:
+            self.vel_y += 0.3
         if self.vel_y > 5:
             self.vel_y = 5
         self.dy += self.vel_y
@@ -330,6 +382,13 @@ class Player():
             screen.blit(self.image, (self.rect.x - 140, self.rect.y))
         else:
             screen.blit(self.image, self.rect)
+
+        #dash
+        if self.dashed:
+            if self.direction == 1:
+                screen.blit(self.image_dash,(self.rect.x-50,self.rect.y))
+            if self.direction == -1:
+                screen.blit(self.image_dash, (self.rect.x + 50, self.rect.y))
 
         #attack effect
         if self.direction == 1 and self.attacked and self.inAir==False:
@@ -411,7 +470,8 @@ while run:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and player.jumpedTimes <2:
                 player.jump()
-
+            if event.key == pygame.K_e:
+                player.dash()
         #mouseclick
         mKey = pygame.mouse.get_pressed()
 

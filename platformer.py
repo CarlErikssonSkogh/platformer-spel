@@ -36,7 +36,36 @@ def draw_grid():
         if line <= 15:
             pygame.draw.line(screen, (255, 255, 255), (0, line * tile_size),(screen_width, line * tile_size))
         pygame.draw.line(screen, (255, 255, 255), (line * tile_size, 0), (line * tile_size, 1280))
+ #funktion for timer (points)
+def Timer():
+    #Calculate the time in seconds
+    timer = pygame.time.get_ticks() // 1000
+    #Check if the timer has reached 10 seconds
+    if timer >= 60:
+        #Calculate the number of minutes and seconds
+        minutes = timer // 60
+        seconds = timer % 60
 
+        #If the seconds are less than 10, format them with a leading zero
+        if seconds < 10:
+            seconds_str = f"0{seconds}"
+        else:
+            seconds_str = str(seconds)
+
+        #Format the timer string as "m:ss"
+        timer = f"{minutes}:{seconds_str}"
+
+    else:
+        #Convert the timer value to a string
+        timer = str(timer)
+
+    #Render the timer label
+    font = pygame.font.SysFont("Arial", 32)
+    text_color = (255, 255, 255)
+    label_surface = font.render(f"Time:{timer}", True, text_color)
+
+    #Blit the timer label onto the screen
+    screen.blit(label_surface, (850, 25))
 class Player():
     def __init__(self, x, y):
         self.images_right = []
@@ -138,40 +167,6 @@ class Player():
         self.attackCounter = 50
         self.dash_counter = 0
 
-
-
-    #funktion for timer (points)
-    def Timer(self):
-        #Calculate the time in seconds
-        self.timer = pygame.time.get_ticks() // 1000
-        #Check if the timer has reached 10 seconds
-        if self.timer >= 60:
-            #Calculate the number of minutes and seconds
-            minutes = self.timer // 60
-            seconds = self.timer % 60
-
-            #If the seconds are less than 10, format them with a leading zero
-            if seconds < 10:
-                seconds_str = f"0{seconds}"
-            else:
-                seconds_str = str(seconds)
-
-            #Format the timer string as "m:ss"
-            self.timer = f"{minutes}:{seconds_str}"
-
-        else:
-            #Convert the timer value to a string
-            self.timer = str(self.timer)
-
-        #Render the timer label
-        font = pygame.font.SysFont("Arial", 32)
-        text_color = (255, 255, 255)
-        label_surface = font.render(f"Time:{self.timer}", True, text_color)
-
-        #Blit the timer label onto the screen
-        screen.blit(label_surface, (850, 25))
-
-
     #function for jumping
     def jump(self):
         self.inAir = True
@@ -203,7 +198,7 @@ class Player():
 
 
     def update(self):
-        player.Timer()
+        Timer()
         #if the player is falling (gravity = 3) inAir = True
         if self.vel_y == 5:
             self.inAir = True
@@ -470,6 +465,7 @@ while run:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and player.jumpedTimes <2:
                 player.jump()
+            #if e is pressed the player should dash
             if event.key == pygame.K_e:
                 player.dash()
         #mouseclick

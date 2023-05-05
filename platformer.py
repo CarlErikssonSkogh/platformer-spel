@@ -1,17 +1,5 @@
 import pygame
 from pygame.locals import *
-#Koden handlar om ett plattformsspel med en samuraj-karaktär som spelaren styr. Koden definierar spelvariabler och laddar
-#in bilder för bakgrund, karaktär och animationer. Den största funktionen är update() och det är denna funktion som körs
-#hela tiden inom en while loop. Klassen World() Skapar alla tiles som t.ex gräsblock. Den gör detta genom att ta in och hantera
-#en world_data som bara är flera listor i en lista med ettor och nollor. Tänk på den som ett grid där alla nollor är luft
-#och alla ettor är gräs osv. Det finns också en funktion som ritar ut en rutnät på skärmen för att positionera alla tiles
-# i World klassen.
-#I koden finns också en klass för spelaren som definierar variabler som position, animationer och rörelse.
-#Det finns även en funktion för att räkna poäng baserat på hur lång tid spelaren har klarat sig.
-
-#Jag har väldigt mycket kod kvar att skriva då jag nästan enbart fokuserat på animationer och rörelser hitills. Det som jag har kvar att skapa är
-#fiender, loot, en shop med uppgraderingar och slutligen en boss. Jag skulle även vilja ha en tutorial i början om jag hinner.
-
 pygame.init()
 
 
@@ -450,7 +438,7 @@ world = World(world_data)
 
 run = True
 while run:
-    clock.tick(fps)
+    clock.tick(60)
     screen.blit(bg_img, (0,0))
     screen.blit(bg_img2, (0,0))
     world.draw()

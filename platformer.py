@@ -66,6 +66,87 @@ def Timer():
 
     #Blit the timer label onto the screen
     screen.blit(label_surface, (850, 25))
+
+class Enemy():
+    def demon(self,x,y):
+        self.images_demon_right = []
+        self.images_demon_left = []
+        self.index = 0
+
+        self.counter = 0
+        for num in range(0,4):
+            demon_run_right = pygame.image.load(f"assets/demon/run/{num}.png")
+            demon_run_right = pygame.transform.scale(demon_run_right, (60, 80))
+            demon_run_left = pygame.transform.flip(demon_run_right, True, False)
+            self.images_demon_right.append(demon_run_right)
+            self.images_demon_left.append(demon_run_left)
+
+        self.imageDemon = self.images_demon_right[self.index]
+
+        self.rectDemon = self.imageDemon.get_rect()
+        self.rectDemon.x = x
+        self.rectDemon.y = y
+        self.turned = False
+        self.vel_x = 2
+        self.widthDemon = self.imageDemon.get_width()
+        self.heightDemon = self.imageDemon.get_height()
+    def update(self):
+        self.counter += 1
+        animation_cooldown = 5
+        #animations
+        if self.counter > animation_cooldown:
+            self.counter = 0
+            self.index += 1
+
+            if self.index >= len(self.images_demon_right):
+                 self.index = 0
+
+            if self.turned == False:
+                self.imageDemon = self.images_demon_right[self.index]
+            if self.turned:
+                self.imageDemon = self.images_demon_left[self.index]
+
+
+        #draw enemy onto screen
+        screen.blit(self.imageDemon, self.rectDemon)
+        # movement
+        #has the enemy turned?
+        if self.turned == False:
+            if self.rectDemon.x <= 15*tile_size:
+                self.rectDemon.x += self.vel_x
+            else:
+                self.turned = True
+        if self.turned:
+            if self.rectDemon.x >= 8*tile_size:
+                self.rectDemon.x -= self.vel_x
+            else:
+                self.turned = False
+
+class Combat():
+    def __init__(self):
+        self.hitCounter = 0
+    def update(self):
+        if self.hitCounter < 50:
+            self.hitCounter += 1
+        hitCooldown = 50
+        print(player.rect.x)
+        #if enemy collides with player
+        #player cant be hit again for a while after being hit
+        if self.hitCounter >= hitCooldown:
+            if player.rect.colliderect(enemy.rectDemon.x, enemy.rectDemon.y, enemy.widthDemon, enemy.heightDemon):
+                self.hitCounter = 0
+                #prevents the player from dashing through the enemy at high speed
+                player.dx = 0
+                if enemy.turned == False:
+                    enemy.turned = True
+                    enemy.rectDemon.x = enemy.rectDemon.x -20
+                    player.rect.x = player.rect.x + 50
+                else:
+                    enemy.turned = False
+                    enemy.rectDemon.x = enemy.rectDemon.x + 20
+                    player.rect.x = player.rect.x - 50
+
+
 class Player():
     def __init__(self, x, y):
         self.images_right = []
@@ -360,7 +441,6 @@ class Player():
         self.rect_attack.y += self.dy
 
         #draw player onto screen
-
         if self.direction == 1:
             self.rect_attack.x = self.rect.x + 100
         if self.direction == -1:
@@ -446,6 +526,9 @@ world_data=[
 
 #instances
 player = Player(100, screen_height-40)
+enemy = Enemy()
+enemy.demon(200,screen_height-120)
+combat = Combat()
 world = World(world_data)
 
 run = True
@@ -455,6 +538,8 @@ while run:
     screen.blit(bg_img2, (0,0))
     world.draw()
     player.update()
+    enemy.update()
+    combat.update()
     #draw_grid()
 
     for event in pygame.event.get():

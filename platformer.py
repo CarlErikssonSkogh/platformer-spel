@@ -1,4 +1,14 @@
 import pygame
+import pickle
+
+try:
+    with open('data.pkl', 'rb') as f:
+        data = pickle.load(f)
+except FileNotFoundError:
+    data = []
+
+highscore_list = data
+
 from pygame.locals import *
 pygame.init()
 
@@ -26,6 +36,7 @@ def draw_grid():
         pygame.draw.line(screen, (255, 255, 255), (line * tile_size, 0), (line * tile_size, 1280))
  #funktion for timer (points)
 def Timer():
+    global highscore_list
     #Calculate the time in seconds
     timer = pygame.time.get_ticks() // 1000
     #Check if the timer has reached 10 seconds
@@ -50,11 +61,13 @@ def Timer():
     #Render the timer label
     font = pygame.font.SysFont("Arial", 32)
     text_color = (255, 255, 255)
-    label_surface = font.render(f"Time:{timer}", True, text_color)
+    timer_surface = font.render(f"Time:{timer}", True, text_color)
+    scoreboard_surface = font.render(highscore_list,True,text_color)
 
     #Blit the timer label onto the screen
-    screen.blit(label_surface, (850, 25))
-
+    screen.blit(timer_surface, (850, 175))
+    screen.blit(scoreboard_surface, (850, 25))
+    highscore_list = timer
 class Enemy():
     def demon(self,x,y):
         self.images_demon_right = []
@@ -117,7 +130,6 @@ class Combat():
         if self.hitCounter < 50:
             self.hitCounter += 1
         hitCooldown = 50
-        print(player.rect.x)
         #if enemy collides with player
         #player cant be hit again for a while after being hit
         if self.hitCounter >= hitCooldown:
@@ -154,7 +166,6 @@ class Player():
         self.attackEffect_index = 0
         self.dash_index = 0
         self.counter = 0
-        self.timer=0
         self.dx = 0
         self.dy = 0
         self.dashed = False
@@ -521,6 +532,7 @@ world = World(world_data)
 
 run = True
 while run:
+    print(highscore_list)
     clock.tick(60)
     screen.blit(bg_img, (0,0))
     screen.blit(bg_img2, (0,0))
@@ -549,5 +561,7 @@ while run:
                 player.attack()
 
     pygame.display.update()
-
 pygame.quit()
+data = highscore_list
+with open('data.pkl', 'wb') as f:
+    pickle.dump(data, f)

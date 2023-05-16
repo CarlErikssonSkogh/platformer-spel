@@ -36,7 +36,7 @@ def draw_grid():
         pygame.draw.line(screen, (255, 255, 255), (line * tile_size, 0), (line * tile_size, 1280))
  #funktion for timer (points)
 def Timer():
-    global highscore_list
+    global timer
     #Calculate the time in seconds
     timer = pygame.time.get_ticks() // 1000
     #Check if the timer has reached 10 seconds
@@ -67,133 +67,150 @@ def Timer():
     #Blit the timer label onto the screen
     screen.blit(timer_surface, (850, 175))
     screen.blit(scoreboard_surface, (850, 25))
-    highscore_list = timer
+
+
+def highscoreList():
+    global highscore_list
+    global timer
+    #sorts the highscore
+    if enemy.allDemonsDead:
+        highscore_list = timer
+def Door():
+    global timer
+    global highscore_list
+    #draws the door
+    rectCoordinates = (tile_size*5,screen_height-3.5*tile_size)
+    rectSize = (2*tile_size,2.5*tile_size)
+    if enemy.allDemonsDead:
+        color=(255,255,255)
+    else:
+        color=(0,0,0)
+    pygame.draw.rect(screen,color,(rectCoordinates,rectSize))
+    pygame.draw.rect(screen, (0,0,0), (rectCoordinates, rectSize),5)
+
+    #if player collides with door
+    if player.rect.colliderect(rectCoordinates, rectSize):
+        #if enemy.demon1.demonDead and enemy.demon2.demonDead and enemy.demon3.demonDead and enemy.demon4.demonDead:
+        highscoreList()
+
+
+
 class Enemy():
-    class Enemy():
-        def __init__(self):
-            self.images_demon_right = []
-            self.images_demon_left = []
-            self.images_death = []
-            self.index = 0
-            self.demonHealth = 100
-            self.demonDead = False
-            self.demonDeadAnimations = True
+    def __init__(self):
+        self.allDemonsDead = False
+    def demon(self, x, y):
+        self.turned = False
+        self.widthDemon = 0
+        self.heightDemon = 0
+        self.imageDemon = None
+        self.rectDemon = None
+        self.images_demon_right = []
+        self.images_demon_left = []
+        self.images_death = []
+        self.index = 0
+        self.demonDmg = 50
+        self.demonHealth = 1  # ska vara 100
+        self.demonDead = False
+        self.demonDeadAnimations = True
+        self.counter = 0
+        #the tile that the demon starts in (the x coordinates)
+        self.startTile=x
+
+        for num in range(0, 4):
+            demon_run_right = pygame.image.load(f"assets/demon/run/{num}.png")
+            demon_run_right = pygame.transform.scale(demon_run_right, (60, 80))
+            demon_run_left = pygame.transform.flip(demon_run_right, True, False)
+            self.images_demon_right.append(demon_run_right)
+            self.images_demon_left.append(demon_run_left)
+
+        for num in range(0, 6):
+            death = pygame.image.load(f"assets/death/{num}.png")
+            death = pygame.transform.scale(death, (60, 80))
+            self.images_death.append(death)
+
+        self.imageDemon = self.images_demon_right[self.index]
+
+        self.rectDemon = self.imageDemon.get_rect()
+        self.rectDemon.x = x
+        self.rectDemon.y = y
+        self.turned = False
+        self.vel_x=2
+        self.widthDemon = self.imageDemon.get_width()
+        self.heightDemon = self.imageDemon.get_height()
+
+    def demonAnimations(self):
+        self.counter += 1
+        animation_cooldown = 5
+
+        if self.counter > animation_cooldown:
             self.counter = 0
-            self.imageDemon = None
-            self.rectDemon = None
-            self.turned = False
-            self.widthDemon = 0
-            self.heightDemon = 0
+            self.index += 1
 
-        def demon(self, x, y):
-            self.images_demon_right = []
-            self.images_demon_left = []
-            self.images_death = []
-            self.index = 0
-            self.demonDmg = 50
-            self.demonHealth = 100
-            self.demonDead = False
-            self.demonDeadAnimations = True
-            self.counter = 0
-            #the tile that the demon starts in (the x coordinates)
-            self.startTile=x
-
-            for num in range(0, 4):
-                demon_run_right = pygame.image.load(f"assets/demon/run/{num}.png")
-                demon_run_right = pygame.transform.scale(demon_run_right, (60, 80))
-                demon_run_left = pygame.transform.flip(demon_run_right, True, False)
-                self.images_demon_right.append(demon_run_right)
-                self.images_demon_left.append(demon_run_left)
-
-            for num in range(0, 6):
-                death = pygame.image.load(f"assets/death/{num}.png")
-                death = pygame.transform.scale(death, (60, 80))
-                self.images_death.append(death)
-
-            self.imageDemon = self.images_demon_right[self.index]
-
-            self.rectDemon = self.imageDemon.get_rect()
-            self.rectDemon.x = x
-            self.rectDemon.y = y
-            self.turned = False
-            self.vel_x=2
-            self.widthDemon = self.imageDemon.get_width()
-            self.heightDemon = self.imageDemon.get_height()
-
-        def demonAnimations(self):
-            self.counter += 1
-            animation_cooldown = 5
-
-            if self.counter > animation_cooldown:
-                self.counter = 0
-                self.index += 1
-
-                if self.demonDead == False:
-                    if self.index >= len(self.images_demon_right):
-                        self.index = 0
-
-                    if self.turned == False:
-                        self.imageDemon = self.images_demon_right[self.index]
-                    if self.turned:
-                        self.imageDemon = self.images_demon_left[self.index]
-
-            if self.demonHealth <= 0:
-                if self.index >= len(self.images_death):
-                    self.demonDeadAnimations = False
+            if self.demonDead == False:
+                if self.index >= len(self.images_demon_right):
                     self.index = 0
 
-                self.imageDemon = self.images_death[self.index]
-                self.demonDead = True
-
-            if self.demonDeadAnimations:
-                screen.blit(self.imageDemon, self.rectDemon)
-
-        def update(self):
-            #movementspeed
-            #if the demon is within 200 pixels of the player and on the same y-coordinate it will get double the movementspeed
-            if self.rectDemon.x-player.rect.x < 0 and self.rectDemon.x-player.rect.x >= -200 and self.rectDemon.y==player.rect.y:
-                self.vel_x =4
-            elif self.rectDemon.x-player.rect.x > 0 and self.rectDemon.x-player.rect.x <= 200 and self.rectDemon.y==player.rect.y:
-                self.vel_x =4
-            else:
-                self.vel_x = 2
-            self.demonAnimations()
-            #changes the end coordinates for the demon depending on where it started
-            if self.startTile == 8 * tile_size or 9 * tile_size:
-                endTile = 15 * tile_size
-            if self.startTile == 2 * tile_size:
-                endTile = 5 * tile_size
-            if self.startTile == 22 * tile_size:
-                endTile = 24 * tile_size
-
-
-            if not self.demonDead:
                 if self.turned == False:
-                    if self.rectDemon.x <= endTile:
-                        self.rectDemon.x += self.vel_x
-                    else:
-                        self.turned = True
+                    self.imageDemon = self.images_demon_right[self.index]
                 if self.turned:
-                    if self.rectDemon.x >= self.startTile:
-                        self.rectDemon.x -= self.vel_x
-                    else:
-                        self.turned = False
+                    self.imageDemon = self.images_demon_left[self.index]
 
+        if self.demonHealth <= 0:
+            if self.index >= len(self.images_death):
+                self.demonDeadAnimations = False
+                self.index = 0
+
+            self.imageDemon = self.images_death[self.index]
+            self.demonDead = True
+
+        if self.demonDeadAnimations:
+            screen.blit(self.imageDemon, self.rectDemon)
+
+    def update(self):
+        #movementspeed
+        #if the demon is within 200 pixels of the player and on the same y-coordinate it will get double the movementspeed
+        if self.rectDemon.x-player.rect.x < 0 and self.rectDemon.x-player.rect.x >= -200 and self.rectDemon.y==player.rect.y:
+            self.vel_x =4
+        elif self.rectDemon.x-player.rect.x > 0 and self.rectDemon.x-player.rect.x <= 200 and self.rectDemon.y==player.rect.y:
+            self.vel_x =4
+        else:
+            self.vel_x = 2
+        self.demonAnimations()
+        #changes the end coordinates for the demon depending on where it started
+        if self.startTile == 8 * tile_size or 9 * tile_size:
+            endTile = 15 * tile_size
+        if self.startTile == 2 * tile_size:
+            endTile = 5 * tile_size
+        if self.startTile == 22 * tile_size:
+            endTile = 24 * tile_size
+
+
+        if not self.demonDead:
+            if self.turned == False:
+                if self.rectDemon.x <= endTile:
+                    self.rectDemon.x += self.vel_x
+                else:
+                    self.turned = True
+            if self.turned:
+                if self.rectDemon.x >= self.startTile:
+                    self.rectDemon.x -= self.vel_x
+                else:
+                    self.turned = False
     #creates two instances of the enemy class (creates two demons at different coordinates)
-    demon1 = Enemy()
-    demon1.demon(9 * tile_size, 480)
+demon1 = Enemy()
+demon1.demon(9 * tile_size, 480)
 
-    #Creates the second demon
-    demon2 = Enemy()
-    demon2.demon(8 * tile_size, screen_height-8*tile_size)
+#Creates the second demon
+demon2 = Enemy()
+demon2.demon(8 * tile_size, screen_height-8*tile_size)
 
-    #Creates the third demon
-    demon3 = Enemy()
-    demon3.demon(2 * tile_size, screen_height - 10 * tile_size)
+#Creates the third demon
+demon3 = Enemy()
+demon3.demon(2 * tile_size, screen_height - 10 * tile_size)
 
-    #Creates the fiourth demon
-    demon4 = Enemy()
-    demon4.demon(22 * tile_size, screen_height - 13 * tile_size)
+#Creates the fiourth demon
+demon4 = Enemy()
+demon4.demon(22 * tile_size, screen_height - 13 * tile_size)
 
 class Combat():
     def __init__(self):
@@ -210,92 +227,91 @@ class Combat():
 
             #Combat with demon1
             if self.hitCounterDemon >= hitCooldown:
-                if not enemy.demon1.demonDead:
-                    if player.rect.colliderect(enemy.demon1.rectDemon.x, enemy.demon1.rectDemon.y, enemy.demon1.widthDemon, enemy.demon1.heightDemon):
+                if not demon1.demonDead:
+                    if player.rect.colliderect(demon1.rectDemon.x, demon1.rectDemon.y, demon1.widthDemon, demon1.heightDemon):
                         self.hitCounterDemon = 0
-                        player.health -= enemy.demon1.demonDmg
+                        player.health -= demon1.demonDmg
                         #Prevents the player from dashing through the enemy at high speed
                         player.dx = 0
-                        if enemy.demon1.turned == False:
-                            enemy.demon1.turned = True
-                            enemy.demon1.rectDemon.x -= 20
+                        if demon1.turned == False:
+                            demon1.turned = True
+                            demon1.rectDemon.x -= 20
                             player.rect.x += 50
                         else:
-                            enemy.demon1.turned = False
-                            enemy.demon1.rectDemon.x += 20
+                            demon1.turned = False
+                            demon1.rectDemon.x += 20
                             player.rect.x -= 50
 
             if self.hitCounterPlayer >= hitCooldown:
-                if player.rect_attack.colliderect(enemy.demon1.rectDemon.x, enemy.demon1.rectDemon.y, enemy.demon1.widthDemon, enemy.demon1.heightDemon) and player.attacked:
+                if player.rect_attack.colliderect(demon1.rectDemon.x, demon1.rectDemon.y, demon1.widthDemon, demon1.heightDemon) and player.attacked:
                     self.hitCounterPlayer = 0
-                    enemy.demon1.demonHealth -= player.playerDmg
-                    print(enemy.demon1.demonHealth)
+                    demon1.demonHealth -= player.playerDmg
 
             #Combat with demon2
             if self.hitCounterDemon >= hitCooldown:
-                if not enemy.demon2.demonDead:
-                    if player.rect.colliderect(enemy.demon2.rectDemon.x, enemy.demon2.rectDemon.y, enemy.demon2.widthDemon, enemy.demon2.heightDemon):
+                if not demon2.demonDead:
+                    if player.rect.colliderect(demon2.rectDemon.x, demon2.rectDemon.y, demon2.widthDemon, demon2.heightDemon):
                         self.hitCounterDemon = 0
-                        player.health -= enemy.demon2.demonDmg
+                        player.health -= demon2.demonDmg
                         #Prevents the player from dashing through the enemy at high speed
                         player.dx = 0
-                        if enemy.demon2.turned == False:
-                            enemy.demon2.turned = True
-                            enemy.demon2.rectDemon.x -= 20
+                        if demon2.turned == False:
+                            demon2.turned = True
+                            demon2.rectDemon.x -= 20
                             player.rect.x += 50
                         else:
-                            enemy.demon2.turned = False
-                            enemy.demon2.rectDemon.x += 20
+                            demon2.turned = False
+                            demon2.rectDemon.x += 20
                             player.rect.x -= 50
 
             if self.hitCounterPlayer >= hitCooldown:
-                if player.rect_attack.colliderect(enemy.demon2.rectDemon.x, enemy.demon2.rectDemon.y, enemy.demon2.widthDemon, enemy.demon2.heightDemon) and player.attacked:
+                if player.rect_attack.colliderect(demon2.rectDemon.x, demon2.rectDemon.y, demon2.widthDemon, demon2.heightDemon) and player.attacked:
                     self.hitCounterPlayer = 0
-                    enemy.demon2.demonHealth -= player.playerDmg
+                    demon2.demonHealth -= player.playerDmg
 
             # Combat with demon3
             if self.hitCounterDemon >= hitCooldown:
-                if not enemy.demon3.demonDead:
-                    if player.rect.colliderect(enemy.demon3.rectDemon.x, enemy.demon3.rectDemon.y,enemy.demon3.widthDemon, enemy.demon3.heightDemon):
+                if not demon3.demonDead:
+                    if player.rect.colliderect(demon3.rectDemon.x, demon3.rectDemon.y,demon3.widthDemon, demon3.heightDemon):
                         self.hitCounterDemon = 0
-                        player.health -= enemy.demon3.demonDmg
+                        player.health -= demon3.demonDmg
                         # Prevents the player from dashing through the enemy at high speed
                         player.dx = 0
-                        if enemy.demon3.turned == False:
-                            enemy.demon3.turned = True
-                            enemy.demon3.rectDemon.x -= 20
+                        if demon3.turned == False:
+                            demon3.turned = True
+                            demon3.rectDemon.x -= 20
                             player.rect.x += 50
                         else:
-                            enemy.demon3.turned = False
-                            enemy.demon3.rectDemon.x += 20
+                            demon3.turned = False
+                            demon3.rectDemon.x += 20
                             player.rect.x -= 50
 
             if self.hitCounterPlayer >= hitCooldown:
-                if player.rect_attack.colliderect(enemy.demon3.rectDemon.x, enemy.demon3.rectDemon.y,enemy.demon3.widthDemon,enemy.demon3.heightDemon) and player.attacked:
+                if player.rect_attack.colliderect(demon3.rectDemon.x, demon3.rectDemon.y,demon3.widthDemon,demon3.heightDemon) and player.attacked:
                     self.hitCounterPlayer = 0
-                    enemy.demon3.demonHealth -= player.playerDmg
+                    demon3.demonHealth -= player.playerDmg
 
             #Combat with demon4
             if self.hitCounterDemon >= hitCooldown:
-                if not enemy.demon4.demonDead:
-                    if player.rect.colliderect(enemy.demon4.rectDemon.x, enemy.demon4.rectDemon.y,enemy.demon4.widthDemon, enemy.demon4.heightDemon):
+                if not demon4.demonDead:
+                    if player.rect.colliderect(demon4.rectDemon.x, demon4.rectDemon.y,demon4.widthDemon, demon4.heightDemon):
                         self.hitCounterDemon = 0
-                        player.health -= enemy.demon4.demonDmg
+                        player.health -= demon4.demonDmg
                         # Prevents the player from dashing through the enemy at high speed
                         player.dx = 0
-                        if enemy.demon4.turned == False:
-                            enemy.demon4.turned = True
-                            enemy.demon4.rectDemon.x -= 20
-                            player.rect.x += 50
+                        if demon4.turned == False:
+                            demon4.turned = True
+                            demon4.rectDemon.x -= 20
+                            rect.x += 50
                         else:
-                            enemy.demon4.turned = False
-                            enemy.demon4.rectDemon.x += 20
+                            demon4.turned = False
+                            demon4.rectDemon.x += 20
                             player.rect.x -= 50
 
             if self.hitCounterPlayer >= hitCooldown:
-                if player.rect_attack.colliderect(enemy.demon4.rectDemon.x, enemy.demon4.rectDemon.y,enemy.demon4.widthDemon,enemy.demon4.heightDemon) and player.attacked:
+                if player.rect_attack.colliderect(demon4.rectDemon.x, demon4.rectDemon.y,demon4.widthDemon,demon4.heightDemon) and player.attacked:
                     self.hitCounterPlayer = 0
-                    enemy.demon4.demonHealth -= player.playerDmg
+                    demon4.demonHealth -= player.playerDmg
 class Player():
     def __init__(self, x, y):
         self.images_right = []
@@ -446,10 +462,10 @@ class Player():
             self.death = False
 
             #Reset enemy positions and attributes
-            enemy.demon1.demon(9 * tile_size, 480)
-            enemy.demon2.demon(8 * tile_size, screen_height - 8 * tile_size)
-            enemy.demon3.demon(2 * tile_size, screen_height - 10 * tile_size)
-            enemy.demon4.demon(22 * tile_size, screen_height - 13 * tile_size)
+            demon1.demon(9 * tile_size, 480)
+            demon2.demon(8 * tile_size, screen_height - 8 * tile_size)
+            demon3.demon(2 * tile_size, screen_height - 10 * tile_size)
+            demon4.demon(22 * tile_size, screen_height - 13 * tile_size)
 
             #reset player
             player.rect.x = 100
@@ -467,7 +483,7 @@ class Player():
     def jump(self):
         self.inAir = True
         self.attacked = False
-        self.vel_y = -7
+        self.vel_y = -10 #ska vara -7 men är -10 nu när jag testar
         self.jumped = True
         self.jumpedTimes += 1
         if [pygame.K_SPACE] == False:
@@ -495,9 +511,7 @@ class Player():
 
     def update(self):
         player.healthbar(50, 15)
-        Timer()
 
-        print(self.index)
         #if the player is falling (gravity = 3) inAir = True
         if self.vel_y == 5:
             self.inAir = True
@@ -673,11 +687,10 @@ class Player():
 
         #draw player onto screen
         if self.direction == 1:
-            self.rect_attack.x = self.rect.x + 100
+            self.rect_attack.x = self.rect.x + 60
         if self.direction == -1:
-            self.rect_attack.x = self.rect.x - 140
-        pygame.draw.rect(screen,(255,0,0),self.rect,1)
-        pygame.draw.rect(screen, (255, 0, 0), self.rect_attack, 1)
+            self.rect_attack.x = self.rect.x - 100
+
 
         #denna kontroll måste göras eftersom bild 4 och 5 i attack ej är centrerade, detta gör så att när man kör flip funktionen
         #på dom så kommer spriten att flytta sig till andra sidan istället istället för att förbli centrerad som med andra sprites.
@@ -767,17 +780,22 @@ while run:
     screen.blit(bg_img, (0,0))
     screen.blit(bg_img2, (0,0))
     world.draw()
+    Door()
+    Timer()
 
     player.update()
     if player.health<=0:
         player.playerDeath()
 
     #updates every demon
-    enemy.demon1.update()
-    enemy.demon2.update()
-    enemy.demon3.update()
-    enemy.demon4.update()
+    demon1.update()
+    demon2.update()
+    demon3.update()
+    demon4.update()
 
+    #checks if all the demons are dead
+    if demon1.demonDead and demon2.demonDead and demon3.demonDead and demon4.demonDead:
+        enemy.allDemonsDead = True
     #Render
     screen.blit(screen, (0, 0))
 

@@ -12,10 +12,16 @@ print(type(highscore_list))
 from pygame.locals import *
 pygame.init()
 
+#variables
 screen_width = 1000
 screen_height= 600
 name = ""
 active=highscoreFlag=False
+menueDone=False
+y_spacing=20
+timerStart = 0
+finishedGame=False
+
 
 clock = pygame.time.Clock()
 fps = 80
@@ -37,13 +43,29 @@ def draw_grid():
         pygame.draw.line(screen, (255, 255, 255), (line * tile_size, 0), (line * tile_size, 1280))
 
 def Name():
-    global name, active
+    global name, active, menueDone
     font = pygame.font.SysFont("Arial",50)
-    text_color = (255, 255, 255)
+    text_color = (111, 55, 32)
     input_surface = font.render(f"Name:{name}", True, text_color)
-    input_rect = pygame.Rect(500, 200, input_surface.get_width(), input_surface.get_height())
-    screen.blit(input_surface, (500, 200))
+    background = pygame.Rect(0,0,1000,600)
+    instructions_surface = font.render("Press Enter When Done", True, text_color)
+
+    #blits the name box in the middle of the screen
+    name_width, name_height = input_surface.get_size()
+    instructions_width, instructions_height = instructions_surface.get_size()
+
+    name_x = (screen_width - name_width) // 2
+    name_y = (screen_height - name_height) // 2
+    instructions_x = (screen_width - instructions_width) // 2
+    instructions_y = (screen_width - instructions_width) // 2
+
+    input_rect = pygame.Rect(name_x,name_y, input_surface.get_width(), input_surface.get_height())
+
+    pygame.draw.rect(screen, (255, 255, 255), background)
+    screen.blit(input_surface, (name_x, name_y))
+    screen.blit(instructions_surface,(instructions_x, instructions_y+100))
     pygame.draw.rect(screen, text_color, input_rect, 1)
+
 
 
     mouse_pos = pygame.mouse.get_pos()
@@ -58,90 +80,119 @@ def Name():
                 if event.key == pygame.K_RETURN:
                     print("Name entered:", name)
                     active = False
+                    menueDone = True
                 elif event.key == pygame.K_BACKSPACE:
                     name = name[:-1]
-                else:
+                elif len(name)<7:
                     name += event.unicode
 
-#funktion for timer (points)
+#function for timer (points)
 def Timer():
-    global timer
+    global timer, timerStart
     #Calculate the time in seconds
-    timer = pygame.time.get_ticks() // 1000
-    #Check if the timer has reached 10 seconds
-    if timer >= 60:
-        #Calculate the number of minutes and seconds
-        minutes = timer // 60
-        seconds = timer % 60
 
-        #If the seconds are less than 10, format them with a leading zero
-        if seconds < 10:
-            seconds_str = f"0{seconds}"
+    #timerStart prevents the timer from going when in the menue
+    if menueDone == False:
+        timerStart = pygame.time.get_ticks() // 1000
+    if menueDone and finishedGame == False:
+        timer = pygame.time.get_ticks() // 1000 - timerStart
+        #Check if the timer has reached 10 seconds
+        if timer >= 60:
+            #Calculate the number of minutes and seconds
+            minutes = timer // 60
+            seconds = timer % 60
+
+            #If the seconds are less than 10, format them with a leading zero
+            if seconds < 10:
+                seconds_str = f"0{seconds}"
+            else:
+                seconds_str = str(seconds)
+
+            #Format the timer string as "m:ss"
+            timer = f"{minutes}:{seconds_str}"
+
         else:
-            seconds_str = str(seconds)
+            #Convert the timer value to a string
+            timer = str(timer)
 
-        #Format the timer string as "m:ss"
-        timer = f"{minutes}:{seconds_str}"
+        #Render the timer label
+        font = pygame.font.SysFont("Arial", 32)
+        text_color = (255, 255, 255)
+        timer_surface = font.render(f"Time:{timer}", True, text_color)
+        #Blit the timer label onto the screen
+        screen.blit(timer_surface, (850, 175))
 
-    else:
-        #Convert the timer value to a string
-        timer = str(timer)
-
-    #Render the timer label
-    font = pygame.font.SysFont("Arial", 32)
-    text_color = (255, 255, 255)
-    timer_surface = font.render(f"Time:{timer}", True, text_color)
-    try:
-        scoreboard_surface = font.render(highscore_list[0],True,text_color)
-    except TypeError:
-        scoreboard_surface = font.render("None",True,text_color)
-    except IndexError:
-        scoreboard_surface = font.render("None",True,text_color)
-    #Blit the timer label onto the screen
-    screen.blit(timer_surface, (850, 175))
-    screen.blit(scoreboard_surface, (850, 25))
 
 
 def highscoreList():
-    global timer, name, highscore_list, highscoreFlag
+    global timer, name, highscore_list
 
     #sorts the highscore
     #if enemy.allDemonsDead:
-    if highscoreFlag == False:
-        if len(highscore_list)==0:
-            highscore_list = [[name,timer]]
-        else:
-            highscore_list.append([name,timer])
-        highscoreFlag = True
 
-    #sparar highscore_list i en pickle fil
+    if len(highscore_list)==0:
+        highscore_list = [[name,timer]]
+    else:
+        highscore_list.append([name,timer])
+
+
+    #saves highscore in a pickle file
     data = highscore_list
     with open('data.pkl', 'wb') as f:
         pickle.dump(data, f)
 
-# sortera topplistan
+
+
+#draws highscore on the screen
+def blitHighscore():
+    global highscore_list, y_spacing
+    font = pygame.font.SysFont("Arial", 20)
+    text_color = (255, 255, 255)
+    list_rect = pygame.Rect(870, 0, 200, 250)
+    name_surface = font.render("Name", True, text_color)
+    time_surface = font.render("Time", True, text_color)
+
+    for i in range(len(highscore_list)):
+        scoreboard_surface = font.render(f"{i+1}:   {highscore_list[i][0]} : {highscore_list[i][1]}", True, text_color)
+        screen.blit(scoreboard_surface, (835, 25 + i * 20))
+        y_spacing += 20
+
+    screen.blit(name_surface, list_rect)
+    screen.blit(time_surface, (list_rect.x + 75, list_rect.y))
+
+#sort highscore_list
 def sort_highscore_list():
     global highscore_list
     for i in range(len(highscore_list)):
         for j in range(i + 1, len(highscore_list)):
             if highscore_list[i][1] > highscore_list[j][1]:
                 highscore_list[i], highscore_list[j] = highscore_list[j], highscore_list[i]
-    if len(highscore_list) == 11:
-        highscore_list.pop(10)
+    #List can't contain more than 5 lists
+    if len(highscore_list) == 6:
+        highscore_list.pop(5)
 
-# Kolla om topplistan är längre än 10, då om någons highscore är lägre än den nya så byts de ut.
-# Annars om listan inte är längre än 10 så läggs det till automatiskt.
-"""def check_highscore_list():
-    if len(highscore_list) >= 10:
-        for i in range(len(highscore_list)):
-            if highscore_list[i][1] < app.player_highscore[1]:
-                highscore_list[i] = app.player_highscore
-                break
-    else:
-        highscore_list.append(app.player_highscore)"""
+def blitEndScreen():
+    global highscore_list, timer
+    font = pygame.font.SysFont("Arial", 32)
+    text_color = (0, 0, 0)
+    background = pygame.Rect(0, 0, 1000, 600)
+    congrats_surface = font.render("Congratulations", True, text_color)
+    name_surface = font.render(f"Name:{name}", True, text_color)
+    time_surface = font.render(f"Time:{timer}", True, text_color)
+
+    #blits everything in the middle
+    congrats_width, congrats_height = congrats_surface.get_size()
+
+    congrats_x = (screen_width - congrats_width) // 2
+    congrats_y = (screen_height - congrats_height) // 2
+
+    pygame.draw.rect(screen,(255,255,255),background)
+    screen.blit(congrats_surface,(congrats_x,congrats_y))
+    screen.blit(time_surface,(congrats_x,congrats_y+150))
+    screen.blit(name_surface, (congrats_x, congrats_y+100))
 
 def Door():
-    global timer
+    global timer,  highscoreFlag, finishedGame
     #draws the door
     rectCoordinates = (tile_size*23,screen_height-13.5*tile_size)
     rectSize = (2*tile_size,2.5*tile_size)
@@ -155,7 +206,13 @@ def Door():
     #if player collides with door
     if player.rect.colliderect(rectCoordinates, rectSize):
         if enemy.allDemonsDead:
-            highscoreList()
+            if highscoreFlag == False:
+                highscoreList()
+                finishedGame=True
+                highscoreFlag = True
+
+
+
 
 
 
@@ -839,6 +896,7 @@ enemy = Enemy()
 combat = Combat()
 world = World(world_data)
 
+
 run = True
 while run:
     clock.tick(60)
@@ -847,9 +905,9 @@ while run:
     world.draw()
     Door()
     Timer()
-    Name()
     player.update()
     sort_highscore_list()
+    blitHighscore()
     if player.health<=0:
         player.playerDeath()
 
@@ -858,7 +916,8 @@ while run:
     demon2.update()
     demon3.update()
     demon4.update()
-
+    if menueDone == False:
+        Name()
     #checks if all the demons are dead
     if demon1.demonDead and demon2.demonDead and demon3.demonDead and demon4.demonDead:
         enemy.allDemonsDead = True
@@ -888,6 +947,8 @@ while run:
             if mKey[0]:
                 if player.attackCounter >= player.attack_cooldown:
                     player.attack()
+    if finishedGame:
+        blitEndScreen()
 
     pygame.display.update()
 pygame.quit()

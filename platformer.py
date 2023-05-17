@@ -8,7 +8,6 @@ except FileNotFoundError:
     data = []
 
 highscore_list = data
-print(type(highscore_list))
 from pygame.locals import *
 pygame.init()
 
@@ -954,14 +953,3 @@ while run:
 pygame.quit()
 print(highscore_list)
 
-
-"""Kvar att göra:
-1. Gör en sorterad scoreboard.
-2. när man nuddar en dörr högst uppe i högra hörnet så vinner man. Hela. 
-skärmen täcks då och så står det grattis, din tid:"tiden man fick"
-därefter kan man trycka på kör igen eller quit.
-3. skapa en funktion som resettar hela spelet efter att man valt kör igen.
-4. När man startar spelet ska det dyka upp ett fönster med alla kontroller som man sedan kan kryssa ner.
-Tid över: 
-gör ny bana med en boss
-"""

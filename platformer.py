@@ -1,5 +1,5 @@
-import pygame
-import pickle
+import pygame, pickle
+
 
 try:
     with open('data.pkl', 'rb') as f:
@@ -8,13 +8,15 @@ except FileNotFoundError:
     data = []
 
 highscore_list = data
-
+print(type(highscore_list))
 from pygame.locals import *
 pygame.init()
 
 
 screen_width = 1000
 screen_height= 600
+name = ""
+active=highscoreFlag=False
 
 clock = pygame.time.Clock()
 fps = 80
@@ -34,7 +36,35 @@ def draw_grid():
         if line <= 15:
             pygame.draw.line(screen, (255, 255, 255), (0, line * tile_size),(screen_width, line * tile_size))
         pygame.draw.line(screen, (255, 255, 255), (line * tile_size, 0), (line * tile_size, 1280))
- #funktion for timer (points)
+
+def Name():
+    global name, active
+    font = pygame.font.SysFont("Arial",50)
+    text_color = (255, 255, 255)
+    input_surface = font.render(f"Name:{name}", True, text_color)
+    input_rect = pygame.Rect(500, 200, input_surface.get_width(), input_surface.get_height())
+    screen.blit(input_surface, (500, 200))
+    pygame.draw.rect(screen, text_color, input_rect, 1)
+
+
+    mouse_pos = pygame.mouse.get_pos()
+    mouse_click = pygame.mouse.get_pressed()
+    if input_rect.collidepoint(mouse_pos):
+        if mouse_click[0] == 1:  #Left mouse button clicked
+            active = True
+
+    if active:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    print("Name entered:", name)
+                    active = False
+                elif event.key == pygame.K_BACKSPACE:
+                    name = name[:-1]
+                else:
+                    name += event.unicode
+
+#funktion for timer (points)
 def Timer():
     global timer
     #Calculate the time in seconds
@@ -62,22 +92,57 @@ def Timer():
     font = pygame.font.SysFont("Arial", 32)
     text_color = (255, 255, 255)
     timer_surface = font.render(f"Time:{timer}", True, text_color)
-    scoreboard_surface = font.render(highscore_list,True,text_color)
-
+    try:
+        scoreboard_surface = font.render(highscore_list[0],True,text_color)
+    except TypeError:
+        scoreboard_surface = font.render("None",True,text_color)
+    except IndexError:
+        scoreboard_surface = font.render("None",True,text_color)
     #Blit the timer label onto the screen
     screen.blit(timer_surface, (850, 175))
     screen.blit(scoreboard_surface, (850, 25))
 
 
 def highscoreList():
-    global highscore_list
-    global timer
+    global timer, name, highscore_list, highscoreFlag
+
     #sorts the highscore
-    if enemy.allDemonsDead:
-        highscore_list = timer
+    #if enemy.allDemonsDead:
+    if highscoreFlag == False:
+        if len(highscore_list)==0:
+            highscore_list = [name,timer]
+            print("test")
+        else:
+            highscore_list.append([name,timer])
+            print("test")
+
+        highscoreFlag = True
+
+    #sparar highscore_list i en pickle fil
+    data = highscore_list
+    with open('data.pkl', 'wb') as f:
+        pickle.dump(data, f)
+
+# sortera topplistan
+def sort_highscore_list():
+    for i in range(len(highscore_list)):
+        for j in range(i + 1, len(highscore_list)):
+            if highscore_list[i][1] < highscore_list[j][1]:
+                highscore_list[i], highscore_list[j] = highscore_list[j], highscore_list[i]
+
+# Kolla om topplistan är längre än 10, då om någons highscore är lägre än den nya så byts de ut.
+# Annars om listan inte är längre än 10 så läggs det till automatiskt.
+"""def check_highscore_list():
+    if len(highscore_list) >= 10:
+        for i in range(len(highscore_list)):
+            if highscore_list[i][1] < app.player_highscore[1]:
+                highscore_list[i] = app.player_highscore
+                break
+    else:
+        highscore_list.append(app.player_highscore)"""
+
 def Door():
     global timer
-    global highscore_list
     #draws the door
     rectCoordinates = (tile_size*5,screen_height-3.5*tile_size)
     rectSize = (2*tile_size,2.5*tile_size)
@@ -95,6 +160,7 @@ def Door():
 
 
 
+
 class Enemy():
     def __init__(self):
         self.allDemonsDead = False
@@ -109,7 +175,7 @@ class Enemy():
         self.images_death = []
         self.index = 0
         self.demonDmg = 50
-        self.demonHealth = 1  # ska vara 100
+        self.demonHealth = 100  # ska vara 100
         self.demonDead = False
         self.demonDeadAnimations = True
         self.counter = 0
@@ -302,7 +368,7 @@ class Combat():
                         if demon4.turned == False:
                             demon4.turned = True
                             demon4.rectDemon.x -= 20
-                            rect.x += 50
+                            player.rect.x += 50
                         else:
                             demon4.turned = False
                             demon4.rectDemon.x += 20
@@ -447,7 +513,7 @@ class Player():
         #label with respawn timer
         font = pygame.font.SysFont("Arial", 50)
         text_color = (255, 255, 255)
-        respawnTimer_surface = font.render(f"Respawn:{round(20-self.respawnTimer,1)}", True, text_color)
+        respawnTimer_surface = font.render(f"Respawn: {round(20-self.respawnTimer,1)}", True, text_color)
         text_width, text_height = respawnTimer_surface.get_size()
         text_x = (screen_width - text_width) // 2
         text_y = (screen_height - text_height) // 2
@@ -758,13 +824,13 @@ world_data=[
 [2,1,2,1,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1],
 [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2],
 [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
-[2,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[2,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[2,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
-[2,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0],
-[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0],
-[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,1,0,0],
+[2,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+[2,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+[2,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,2],
+[2,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,2],
+[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,2],
+[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,1,0,2],
 [2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,1,1],
 ]
 
@@ -782,7 +848,7 @@ while run:
     world.draw()
     Door()
     Timer()
-
+    Name()
     player.update()
     if player.health<=0:
         player.playerDeath()
@@ -825,9 +891,7 @@ while run:
 
     pygame.display.update()
 pygame.quit()
-data = highscore_list
-with open('data.pkl', 'wb') as f:
-    pickle.dump(data, f)
+
 
 """Kvar att göra:
 1. Gör en sorterad scoreboard.

@@ -12,7 +12,6 @@ print(type(highscore_list))
 from pygame.locals import *
 pygame.init()
 
-
 screen_width = 1000
 screen_height= 600
 name = ""
@@ -110,12 +109,9 @@ def highscoreList():
     #if enemy.allDemonsDead:
     if highscoreFlag == False:
         if len(highscore_list)==0:
-            highscore_list = [name,timer]
-            print("test")
+            highscore_list = [[name,timer]]
         else:
             highscore_list.append([name,timer])
-            print("test")
-
         highscoreFlag = True
 
     #sparar highscore_list i en pickle fil
@@ -125,10 +121,13 @@ def highscoreList():
 
 # sortera topplistan
 def sort_highscore_list():
+    global highscore_list
     for i in range(len(highscore_list)):
         for j in range(i + 1, len(highscore_list)):
-            if highscore_list[i][1] < highscore_list[j][1]:
+            if highscore_list[i][1] > highscore_list[j][1]:
                 highscore_list[i], highscore_list[j] = highscore_list[j], highscore_list[i]
+    if len(highscore_list) == 11:
+        highscore_list.pop(10)
 
 # Kolla om topplistan är längre än 10, då om någons highscore är lägre än den nya så byts de ut.
 # Annars om listan inte är längre än 10 så läggs det till automatiskt.
@@ -144,7 +143,7 @@ def sort_highscore_list():
 def Door():
     global timer
     #draws the door
-    rectCoordinates = (tile_size*5,screen_height-3.5*tile_size)
+    rectCoordinates = (tile_size*23,screen_height-13.5*tile_size)
     rectSize = (2*tile_size,2.5*tile_size)
     if enemy.allDemonsDead:
         color=(255,255,255)
@@ -155,8 +154,8 @@ def Door():
 
     #if player collides with door
     if player.rect.colliderect(rectCoordinates, rectSize):
-        #if enemy.demon1.demonDead and enemy.demon2.demonDead and enemy.demon3.demonDead and enemy.demon4.demonDead:
-        highscoreList()
+        if enemy.allDemonsDead:
+            highscoreList()
 
 
 
@@ -850,6 +849,7 @@ while run:
     Timer()
     Name()
     player.update()
+    sort_highscore_list()
     if player.health<=0:
         player.playerDeath()
 
@@ -891,6 +891,7 @@ while run:
 
     pygame.display.update()
 pygame.quit()
+print(highscore_list)
 
 
 """Kvar att göra:

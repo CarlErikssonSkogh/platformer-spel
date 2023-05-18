@@ -44,10 +44,14 @@ def draw_grid():
 def Name():
     global name, active, menueDone
     font = pygame.font.SysFont("Arial",50)
-    text_color = (111, 55, 32)
+    controlsFont = pygame.font.SysFont("Arial", 28)
+    text_color = (0, 0, 0)
     input_surface = font.render(f"Name:{name}", True, text_color)
     background = pygame.Rect(0,0,1000,600)
     instructions_surface = font.render("Press Enter When Done", True, text_color)
+    controls_surface = controlsFont.render("E = Dash, A = Move left, D = Move right, M1 = attack", True, text_color)
+    objective_text = "Your objective is to eliminate all the monsters and escape through the door"
+    objective_surface = controlsFont.render(objective_text, True, text_color)
 
     #blits the name box in the middle of the screen
     name_width, name_height = input_surface.get_size()
@@ -61,6 +65,8 @@ def Name():
     input_rect = pygame.Rect(name_x,name_y, input_surface.get_width(), input_surface.get_height())
 
     pygame.draw.rect(screen, (255, 255, 255), background)
+    screen.blit(controls_surface, (180, 0))
+    screen.blit(objective_surface, (25, 100))
     screen.blit(input_surface, (name_x, name_y))
     screen.blit(instructions_surface,(instructions_x, instructions_y+100))
     pygame.draw.rect(screen, text_color, input_rect, 1)
@@ -170,14 +176,20 @@ def sort_highscore_list():
     if len(highscore_list) == 6:
         highscore_list.pop(5)
 
+#blits the endscreen with congratulations, time, name and placement
 def blitEndScreen():
     global highscore_list, timer
     font = pygame.font.SysFont("Arial", 32)
     text_color = (0, 0, 0)
     background = pygame.Rect(0, 0, 1000, 600)
     congrats_surface = font.render("Congratulations", True, text_color)
-    name_surface = font.render(f"Name:{name}", True, text_color)
-    time_surface = font.render(f"Time:{timer}", True, text_color)
+    name_surface = font.render(f"Name: {name}", True, text_color)
+    time_surface = font.render(f"Time: {timer}", True, text_color)
+    for index in range(len(highscore_list)):
+        if name in highscore_list[index][0]:
+            placement_surface = font.render(f"You placed in the top {index+1}", True, text_color)
+        else:
+            placement_surface = font.render(f"You didn't reach the leaderboard", True, text_color)
 
     #blits everything in the middle
     congrats_width, congrats_height = congrats_surface.get_size()
@@ -189,6 +201,7 @@ def blitEndScreen():
     screen.blit(congrats_surface,(congrats_x,congrats_y))
     screen.blit(time_surface,(congrats_x,congrats_y+150))
     screen.blit(name_surface, (congrats_x, congrats_y+100))
+    screen.blit(placement_surface, (congrats_x, congrats_y+200))
 
 def Door():
     global timer,  highscoreFlag, finishedGame
@@ -604,7 +617,7 @@ class Player():
     def jump(self):
         self.inAir = True
         self.attacked = False
-        self.vel_y = -10 #ska vara -7 men är -10 nu när jag testar
+        self.vel_y = -7
         self.jumped = True
         self.jumpedTimes += 1
         if [pygame.K_SPACE] == False:

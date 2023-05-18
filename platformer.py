@@ -49,7 +49,7 @@ def Name():
     input_surface = font.render(f"Name:{name}", True, text_color)
     background = pygame.Rect(0,0,1000,600)
     instructions_surface = font.render("Press Enter When Done", True, text_color)
-    controls_surface = controlsFont.render("E = Dash, A = Move left, D = Move right, M1 = attack", True, text_color)
+    controls_surface = controlsFont.render("E = Dash, A = Move left, D = Move right, SPACE = Jump/Doublejump, M1 = attack", True, text_color)
     objective_text = "Your objective is to eliminate all the monsters and escape through the door"
     objective_surface = controlsFont.render(objective_text, True, text_color)
 
@@ -65,8 +65,8 @@ def Name():
     input_rect = pygame.Rect(name_x,name_y, input_surface.get_width(), input_surface.get_height())
 
     pygame.draw.rect(screen, (255, 255, 255), background)
-    screen.blit(controls_surface, (180, 0))
-    screen.blit(objective_surface, (25, 100))
+    screen.blit(controls_surface, (90, 0))
+    screen.blit(objective_surface, (60, 100))
     screen.blit(input_surface, (name_x, name_y))
     screen.blit(instructions_surface,(instructions_x, instructions_y+100))
     pygame.draw.rect(screen, text_color, input_rect, 1)
@@ -471,7 +471,7 @@ class Player():
         self.dy = 0
         self.dashed = False
         self.health = 200
-        self.playerDmg = 50
+        self.playerDmg = 100
 
         #animation
         #attack effect
@@ -617,7 +617,7 @@ class Player():
     def jump(self):
         self.inAir = True
         self.attacked = False
-        self.vel_y = -7
+        self.vel_y = -12
         self.jumped = True
         self.jumpedTimes += 1
         if [pygame.K_SPACE] == False:
@@ -966,3 +966,4 @@ while run:
 pygame.quit()
 print(highscore_list)
 
+"""Fixa:minuter fungerar ej på scorebaord då den tror att 1:01 minuter < 10 sekunder"""

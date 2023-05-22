@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="f64efffa-76d3-492d-80cd-2782e143c334" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/data.pkl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/platformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/platformer.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

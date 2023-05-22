@@ -471,7 +471,7 @@ class Player():
         self.dy = 0
         self.dashed = False
         self.health = 200
-        self.playerDmg = 100
+        self.playerDmg = 50
 
         #animation
         #attack effect

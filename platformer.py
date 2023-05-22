@@ -617,7 +617,7 @@ class Player():
     def jump(self):
         self.inAir = True
         self.attacked = False
-        self.vel_y = -12
+        self.vel_y = -7
         self.jumped = True
         self.jumpedTimes += 1
         if [pygame.K_SPACE] == False:

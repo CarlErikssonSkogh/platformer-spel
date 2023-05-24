@@ -35,13 +35,15 @@ tile_size = 40
 bg_img = pygame.image.load("assets/background/background.png")
 bg_img2 = pygame.image.load("assets/background/middleground.png")
 
+#function that draws a grid over the screen
 def draw_grid():
     for line in range(0,25):
         if line <= 15:
             pygame.draw.line(screen, (255, 255, 255), (0, line * tile_size),(screen_width, line * tile_size))
         pygame.draw.line(screen, (255, 255, 255), (line * tile_size, 0), (line * tile_size, 1280))
 
-def Name():
+#defines and blits the start screen (Name, instructions, controls and objective)
+def startScreen():
     global name, active, menueDone
     font = pygame.font.SysFont("Arial",50)
     controlsFont = pygame.font.SysFont("Arial", 28)
@@ -72,22 +74,26 @@ def Name():
     pygame.draw.rect(screen, text_color, input_rect, 1)
 
 
-
+    #if the input_rect collides with the mouse and mouse1 is clicked
     mouse_pos = pygame.mouse.get_pos()
     mouse_click = pygame.mouse.get_pressed()
     if input_rect.collidepoint(mouse_pos):
         if mouse_click[0] == 1:  #Left mouse button clicked
             active = True
 
+    #if the condition above occurs
     if active:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
+                #if the enter key is pressed tha name is saved
                 if event.key == pygame.K_RETURN:
                     print("Name entered:", name)
                     active = False
                     menueDone = True
+                #the last letter is removed is backspace is pressed
                 elif event.key == pygame.K_BACKSPACE:
                     name = name[:-1]
+                #name equals name + the key that was pressed
                 elif len(name)<7:
                     name += event.unicode
 
@@ -250,6 +256,7 @@ class Enemy():
         #the tile that the demon starts in (the x coordinates)
         self.startTile=x
 
+        #creates all the images for animation
         for num in range(0, 4):
             demon_run_right = pygame.image.load(f"assets/demon/run/{num}.png")
             demon_run_right = pygame.transform.scale(demon_run_right, (60, 80))
@@ -272,6 +279,7 @@ class Enemy():
         self.widthDemon = self.imageDemon.get_width()
         self.heightDemon = self.imageDemon.get_height()
 
+    #conditions for changing the demons image
     def demonAnimations(self):
         self.counter += 1
         animation_cooldown = 5
@@ -300,6 +308,7 @@ class Enemy():
         if self.demonDeadAnimations:
             screen.blit(self.imageDemon, self.rectDemon)
 
+    #the update function always runs
     def update(self):
         #movementspeed
         #if the demon is within 200 pixels of the player and on the same y-coordinate it will get double the movementspeed
@@ -310,7 +319,7 @@ class Enemy():
         else:
             self.vel_x = 2
         self.demonAnimations()
-        #changes the end coordinates for the demon depending on where it started
+        #changes the end coordinates for the demon depending on where it started (end coordinates = at what coordinates the demon should trun)
         if self.startTile == 8 * tile_size or 9 * tile_size:
             endTile = 15 * tile_size
         if self.startTile == 2 * tile_size:
@@ -318,7 +327,7 @@ class Enemy():
         if self.startTile == 22 * tile_size:
             endTile = 24 * tile_size
 
-
+        #the demon turns if it reaches the endTile or the startTile (if it is alive)
         if not self.demonDead:
             if self.turned == False:
                 if self.rectDemon.x <= endTile:
@@ -330,7 +339,7 @@ class Enemy():
                     self.rectDemon.x -= self.vel_x
                 else:
                     self.turned = False
-    #creates two instances of the enemy class (creates two demons at different coordinates)
+#creates multiple instances of the enemy class (creates four demons at different coordinates)
 demon1 = Enemy()
 demon1.demon(9 * tile_size, 480)
 
@@ -351,7 +360,9 @@ class Combat():
         self.hitCounterDemon = 0
         self.hitCounterPlayer = 0
 
+    #update function runs all the time
     def update(self):
+        #defines the cooldown and timer when you get hit
         if player.death==False:
             if self.hitCounterDemon < 50:
                 self.hitCounterDemon += 1
@@ -360,13 +371,18 @@ class Combat():
             hitCooldown = 50
 
             #Combat with demon1
+
+            #if the cooldown is over
             if self.hitCounterDemon >= hitCooldown:
+                #player takes damage if the player and demon collides
                 if not demon1.demonDead:
                     if player.rect.colliderect(demon1.rectDemon.x, demon1.rectDemon.y, demon1.widthDemon, demon1.heightDemon):
                         self.hitCounterDemon = 0
                         player.health -= demon1.demonDmg
                         #Prevents the player from dashing through the enemy at high speed
                         player.dx = 0
+
+                        #if they collide both player and demon gets knocked back and the demon turns to the other direction
                         if demon1.turned == False:
                             demon1.turned = True
                             demon1.rectDemon.x -= 20
@@ -376,10 +392,14 @@ class Combat():
                             demon1.rectDemon.x += 20
                             player.rect.x -= 50
 
+            #the demon takes dmaage if the cooldown is over and the demon is hit with an attack
             if self.hitCounterPlayer >= hitCooldown:
                 if player.rect_attack.colliderect(demon1.rectDemon.x, demon1.rectDemon.y, demon1.widthDemon, demon1.heightDemon) and player.attacked:
                     self.hitCounterPlayer = 0
                     demon1.demonHealth -= player.playerDmg
+
+            #Combat with all the other demons is the same but with other variables for the demon
+
 
             #Combat with demon2
             if self.hitCounterDemon >= hitCooldown:
@@ -562,6 +582,7 @@ class Player():
 
         self.deathFlag=True
 
+    #draws the healthbar
     def healthbar(self,x,y):
         self.healthbarRect_x=x
         self.healthbarRect_y=y
@@ -630,6 +651,7 @@ class Player():
             self.index = 0
             self.attackEffect_index = 0
             self.attackCounter = 0
+
     #function for dashing
     def dash(self):
         self.dash_index = 0
@@ -642,7 +664,7 @@ class Player():
                 self.dx = -20
 
 
-
+    #update function runs all the time
     def update(self):
         player.healthbar(50, 15)
 
@@ -860,6 +882,7 @@ class World():
         dirt_img = pygame.image.load("assets/tiles (biome 1)/tile001.png")
         void_img = pygame.image.load("assets/tiles (biome 1)/tile014.png")
 
+        #creates all the images at the right coordinates for each row and column in the grid
         row_count = 0
         for row in data:
             col_count = 0
@@ -869,6 +892,7 @@ class World():
                     img_rect = img.get_rect()
                     img_rect.x = col_count * tile_size
                     img_rect.y = row_count * tile_size
+                    #saves the image and coordinates in a tuple
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
                 if tile == 2:
@@ -876,14 +900,18 @@ class World():
                     img_rect = img.get_rect()
                     img_rect.x = col_count * tile_size
                     img_rect.y = row_count * tile_size
+                    #saves the image and coordinates in a tuple
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
                 col_count += 1
             row_count += 1
+
+    #blits the tiles at the right coordinates
     def draw(self):
         for tile in self.tile_list:
             screen.blit(tile[0],tile[1])
 
+#each number represents a different tile in the World() function
 world_data=[
 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -929,7 +957,7 @@ while run:
     demon3.update()
     demon4.update()
     if menueDone == False:
-        Name()
+        startScreen()
     #checks if all the demons are dead
     if demon1.demonDead and demon2.demonDead and demon3.demonDead and demon4.demonDead:
         enemy.allDemonsDead = True
@@ -966,4 +994,6 @@ while run:
 pygame.quit()
 print(highscore_list)
 
+
+#to do list
 """Fixa:minuter fungerar ej på scorebaord då den tror att 1:01 minuter < 10 sekunder"""

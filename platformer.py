@@ -877,7 +877,6 @@ class World():
     def __init__(self, data):
         self.tile_list = []
         #block som ej ska ha någon collision
-        self.tile_list_liquid = []
         #load images
         dirt_img = pygame.image.load("assets/tiles (biome 1)/tile001.png")
         void_img = pygame.image.load("assets/tiles (biome 1)/tile014.png")
@@ -993,7 +992,6 @@ while run:
     pygame.display.update()
 pygame.quit()
 print(highscore_list)
-
 
 #to do list
 """Fixa:minuter fungerar ej på scorebaord då den tror att 1:01 minuter < 10 sekunder"""
